@@ -15,10 +15,12 @@ open class UIScrollView: UIView {
     open weak var delegate: UIScrollViewDelegate? // TODO: change this to individually settable callbacks
     open var panGestureRecognizer = UIPanGestureRecognizer()
 
+    
+    private let scrollViewIndicatorsContainerView = UIView()
     private var verticalScrollIndicator = CALayer()
     private var horizontalScrollIndicator = CALayer()
     
-    public var indicatorStyle: UIScrollViewIndicatorStyle = .`default` //TODO: implement and use `default`
+    public var indicatorStyle: UIScrollViewIndicatorStyle = .`default`
 
     var weightedAverageVelocity: CGPoint = .zero
 
@@ -28,19 +30,30 @@ open class UIScrollView: UIView {
         panGestureRecognizer.onStateChanged = { [weak self] in self?.onPanGestureStateChanged() }
         addGestureRecognizer(panGestureRecognizer)
         clipsToBounds = true
-
+        
+    }
+    
+    open override func didMoveToSuperview() {
+        superview!.addSubview(scrollViewIndicatorsContainerView)
+        scrollViewIndicatorsContainerView.backgroundColor = UIColor.green.withAlphaComponent(0.1)
+        scrollViewIndicatorsContainerView.isUserInteractionEnabled = false
         
         for scrollIndicator in [verticalScrollIndicator, horizontalScrollIndicator] {
             scrollIndicator.cornerRadius = 1
             scrollIndicator.disableAnimations = true
-            scrollIndicator.backgroundColor = self.indicatorStyle.backgroundColor
+            scrollIndicator.backgroundColor = UIColor.red
             scrollIndicator.borderWidth = 0.5
             scrollIndicator.borderColor = self.indicatorStyle.borderColor
-            layer.addSublayer(scrollIndicator)
+            scrollViewIndicatorsContainerView.layer.addSublayer(scrollIndicator)
         }
-
     }
 
+    open override var frame: CGRect {
+        willSet (newFrame) {
+            scrollViewIndicatorsContainerView.frame = newFrame
+        }
+    }
+    
     open var isDecelerating: Bool = false
 
     private func onPan() {
@@ -89,8 +102,7 @@ open class UIScrollView: UIView {
         set {
             layer.removeAnimation(forKey: "bounds")
             bounds.origin = newValue
-            //TODO: how's this relate to layoutSubviews? abstract out to a func?
-            //TODO: framing called twice, check it 
+            
             if showsVerticalScrollIndicator { layoutVerticalScrollIndicator() }
             if showsHorizontalScrollIndicator { layoutHorizontalScrollIndicator() }
         }
@@ -113,15 +125,8 @@ open class UIScrollView: UIView {
         CATransaction.commit()
     }
 
-    override open func layoutSubviews() {
-        super.layoutSubviews()
-        
-        //TODO: implement as one func?
-        if showsVerticalScrollIndicator { layoutVerticalScrollIndicator() }
-        if showsHorizontalScrollIndicator { layoutHorizontalScrollIndicator() }
-    }
 
-    private func layoutVerticalScrollIndicator() {
+    public func layoutVerticalScrollIndicator() {
         verticalScrollIndicator.isHidden = (contentSize.height == bounds.height)
         if verticalScrollIndicator.isHidden { return }
 
@@ -137,14 +142,20 @@ open class UIScrollView: UIView {
         )
     }
     
-    private func layoutHorizontalScrollIndicator() {
+    public func layoutHorizontalScrollIndicator() {
         horizontalScrollIndicator.isHidden = (contentSize.width == bounds.width)
         if horizontalScrollIndicator.isHidden { return }
         
         
         let indicatorWidth: CGFloat = (bounds.width / contentSize.width) * bounds.width
-        let indicatorHeight: CGFloat = 2
-        let indicatorXOffset = contentOffset.x + (contentOffset.x / contentSize.width) * bounds.width
+        let indicatorHeight: CGFloat = 5
+        
+    
+        let indicatorXOffset = (contentOffset.x / contentSize.width) * bounds.width
+      
+        
+        print("Setting x offset to: \(indicatorXOffset)\n")
+        
         
         horizontalScrollIndicator.frame = CGRect(
             x: indicatorXOffset,
@@ -152,10 +163,12 @@ open class UIScrollView: UIView {
             width: indicatorWidth,
             height: indicatorHeight
         )
+        
     }
+    
 
     open func flashScrollIndicators() {
-        //
+        //TODO: implement this
     }
 }
 
@@ -164,6 +177,8 @@ public protocol UIScrollViewDelegate: class {
     func scrollViewDidScroll(_ scrollView: UIScrollView)
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate: Bool)
 }
+
+
 
 public enum UIScrollViewIndicatorStyle {
     case `default`
