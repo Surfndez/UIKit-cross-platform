@@ -35,15 +35,15 @@ open class UIScrollView: UIView {
     
     open override func didMoveToSuperview() {
         superview!.addSubview(scrollViewIndicatorsContainerView)
-        scrollViewIndicatorsContainerView.backgroundColor = UIColor.green.withAlphaComponent(0.1)
+//        scrollViewIndicatorsContainerView.backgroundColor = UIColor.clear
         scrollViewIndicatorsContainerView.isUserInteractionEnabled = false
         
         for scrollIndicator in [verticalScrollIndicator, horizontalScrollIndicator] {
-            scrollIndicator.cornerRadius = 1
+            scrollIndicator.cornerRadius = 1.5
             scrollIndicator.disableAnimations = true
-            scrollIndicator.backgroundColor = UIColor.red
+            scrollIndicator.backgroundColor = indicatorStyle.backgroundColor
             scrollIndicator.borderWidth = 0.5
-            scrollIndicator.borderColor = self.indicatorStyle.borderColor
+            scrollIndicator.borderColor = indicatorStyle.borderColor
             scrollViewIndicatorsContainerView.layer.addSublayer(scrollIndicator)
         }
     }
@@ -130,9 +130,11 @@ open class UIScrollView: UIView {
         verticalScrollIndicator.isHidden = (contentSize.height == bounds.height)
         if verticalScrollIndicator.isHidden { return }
 
-        let indicatorWidth: CGFloat = 2
+        let indicatorWidth: CGFloat = 3
         let indicatorHeight: CGFloat = (bounds.height / contentSize.height) * bounds.height
-        let indicatorYOffset = contentOffset.y + (contentOffset.y / contentSize.height) * bounds.height
+
+        let visibleOffset = (layer._presentation?.bounds.origin ?? contentOffset)
+        let indicatorYOffset = visibleOffset.y + (visibleOffset.y / contentSize.height) * bounds.height
 
         verticalScrollIndicator.frame = CGRect(
             x: bounds.maxX - indicatorWidth,
@@ -148,10 +150,10 @@ open class UIScrollView: UIView {
         
         
         let indicatorWidth: CGFloat = (bounds.width / contentSize.width) * bounds.width
-        let indicatorHeight: CGFloat = 5
+        let indicatorHeight: CGFloat = 3
         
-    
-        let indicatorXOffset = (contentOffset.x / contentSize.width) * bounds.width
+        let visibleOffset = (layer._presentation?.bounds.origin ?? contentOffset)
+        let indicatorXOffset = (visibleOffset.x / contentSize.width) * bounds.width
       
         
         print("Setting x offset to: \(indicatorXOffset)\n")
